@@ -1,5 +1,6 @@
 ﻿#include <iostream>
 #include <string>
+#include <fstream>
 
 // Вывод основного меню
 void Print() {
@@ -9,10 +10,17 @@ void Print() {
         << "3. Просмотр всех объектов \n"
         << "4. Редактировать трубу \n"
         << "5. Редактировать КС \n"
-        << "6. Сохранить \n"
-        << "7. Загрузить \n"
+        << "6. Сохранить в файл\n"
+        << "7. Загрузить из файла\n"
         << "0. Выход \n"
+        << "0. -----------------------\n"
         << "Выберите пункт меню: ";
+}
+
+void check() {
+    std::cout << "Введите корректное значение ";
+    std::cin.clear(); // Сброс состояния потока
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 }
 
 // Структура для хранения данных о трубе
@@ -30,19 +38,26 @@ Tube createTube() {
     tube.presence = true;
 
     std::cout << "Введите название трубы: ";
-    std::cin.ignore();  // Игнорируем остаток предыдущего ввода
+    std::cin.ignore();
     std::getline(std::cin, tube.name);
 
     std::cout << "Введите длину трубы: ";
-    std::cin >> tube.length;
+    while (!(std::cin >> tube.length)) {
+        check();
+    }
 
     std::cout << "Введите диаметр трубы: ";
-    std::cin >> tube.diameter;
+    while (!(std::cin >> tube.diameter)) {
+        check();
+    }
 
     std::cout << "Труба в ремонте? (1 - да, 0 - нет): ";
     int repairStatus;
     std::cin >> repairStatus;
     tube.inRepair = (repairStatus == 1);
+    while (!(std::cin >> repairStatus)) {
+        check();
+    }
 
     return tube;
 }
@@ -62,29 +77,35 @@ CompressionStation createCompressionStation() {
     cs.presence = true;
 
     std::cout << "Введите название станции: ";
-    std::cin.ignore();  // Игнорируем остаток предыдущего ввода
+    std::cin.ignore();  
     std::getline(std::cin, cs.name);
 
     std::cout << "Введите количество цехов: ";
-    std::cin >> cs.numbersOfWorkshops;
+    while (!(std::cin >> cs.numbersOfWorkshops)) {
+        check();
+    }
 
     std::cout << "Введите количество работающих цехов: ";
-    std::cin >> cs.workshopsAtWork;
+    while (!(std::cin >> cs.workshopsAtWork)) {
+        check();
+    }
 
     if (cs.workshopsAtWork > cs.numbersOfWorkshops) {
         std::cout << "Количество работающих цехов не должно превышать общее количество цехов.\n";
-        cs.presence = false;  // Устанавливаем наличие на false, если данные некорректны
-    }
-    else {
+        cs.presence = false;
+        } else {
         std::cout << "Введите значение эффективности: ";
-        std::cin >> cs.efficiency;
+        while (!(std::cin >> cs.efficiency)) {
+            check();
+        }
     }
     return cs;
 }
 
 // Функция для отображения информации о трубе
 void displayTube(const Tube& tube) {
-    std::cout << "Название трубы: " << tube.name << "\n"
+    std::cout << "--- Труба --- \n"
+        << "Название трубы: " << tube.name << "\n"
         << "Длина: " << tube.length << "\n"
         << "Диаметр: " << tube.diameter << "\n"
         << "В ремонте: " << (tube.inRepair ? "Да" : "Нет") << "\n";
@@ -92,7 +113,8 @@ void displayTube(const Tube& tube) {
 
 // Функция для отображения информации о компрессорной станции
 void displayCompressionStation(const CompressionStation& cs) {
-    std::cout << "Название станции: " << cs.name << "\n"
+    std::cout << "--- Компрессорная станция --- \n"
+        << "Название станции: " << cs.name << "\n"
         << "Количество цехов: " << cs.numbersOfWorkshops << "\n"
         << "Цехов в работе: " << cs.workshopsAtWork << "\n"
         << "Эффективность: " << cs.efficiency << "\n";
@@ -100,6 +122,7 @@ void displayCompressionStation(const CompressionStation& cs) {
 
 int main() {
     std::setlocale(LC_ALL, "Russian");
+
     Tube tube;                  // Объект для хранения трубы
     CompressionStation cs;      // Объект для хранения компрессорной станции
     int choice;
@@ -107,7 +130,9 @@ int main() {
     while (true) {
         // Вывод меню
         Print();
-        std::cin >> choice;
+        while (!(std::cin >> choice)) { 
+            check();
+        }
 
         switch (choice) {
         case 1:
@@ -147,13 +172,40 @@ int main() {
             }
             break;
 
+        case 6: {
+            std::ofstream file("smeta.txt");  // Создание файла
+            if (!file.is_open()) {  // Проверка на возможность открытия фала
+                std::cerr << "Ошибка: не удалось открыть файл для записи." << std::endl;
+                return 1;
+            }
+            if (tube.presence) {
+                file << "--- Труба --- \n";
+                file << "Название трубы: " << tube.name << "\n";
+                file << "Длина: " << tube.length << "\n";
+                file << "Диаметр: " << tube.diameter << "\n";
+                file << "В ремонте: " << (tube.inRepair ? "Да" : "Нет") << "\n";
+            }
+            else {
+                file << "Труба не создана.\n";
+            }
+            if (cs.presence) {
+                file << "--- Компрессорная станция --- \n";
+                file << "Название станции: " << cs.name << "\n";
+                file << "Количество цехов: " << cs.numbersOfWorkshops << "\n";
+                file << "Цехов в работе: " << cs.workshopsAtWork << "\n";
+                file << "Эффективность: " << cs.efficiency << "\n";
+            }
+            else {
+                file << "Компрессорная станция не создана.\n";
+            }
+            file.close();
+            std::cout << "Данные сохранены\n";
+        }
+              break;
+
         case 0:
             std::cout << "Выход из программы.\n";
             return 0;
-
-        default:
-            std::cout << "Введите корректное значение.\n";
-            break;
         }
     }
 }
