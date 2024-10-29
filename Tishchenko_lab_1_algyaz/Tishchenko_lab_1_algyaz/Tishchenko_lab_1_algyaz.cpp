@@ -179,6 +179,32 @@ void editCompressionStation(CompressionStation& cs) {
     if (newEfficiency != 0) cs.efficiency = newEfficiency;
 }
 
+void saveToFile(const Tube& tube, const CompressionStation& cs) {
+    std::ofstream file("smeta.txt");
+    if (!file.is_open()) {
+        std::cerr << "Ошибка: не удалось открыть файл для записи." << std::endl;
+        return;
+    }
+
+    if (tube.presence) {
+        file << "--- Труба ---\n";
+        file << "Название трубы: " << tube.name << "\n";
+        file << "Длина: " << tube.length << "\n";
+        file << "Диаметр: " << tube.diameter << "\n";
+        file << "В ремонте: " << (tube.inRepair ? "Да" : "Нет") << "\n";
+    }
+
+    if (cs.presence) {
+        file << "--- Компрессорная станция ---\n";
+        file << "Название станции: " << cs.name << "\n";
+        file << "Количество цехов: " << cs.numbersOfWorkshops << "\n";
+        file << "Цехов в работе: " << cs.workshopsAtWork << "\n";
+        file << "Эффективность: " << cs.efficiency << "\n";
+    }
+    file.close();
+    std::cout << "Данные сохранены\n";
+}
+
 void loadFromFile(Tube& tube, CompressionStation& cs) {
     std::ifstream file("smeta.txt");
     if (!file.is_open()) {
@@ -271,41 +297,14 @@ int main() {
             editCompressionStation(cs);
             break;
 
-        case 6: {
-            std::ofstream file("smeta.txt");  
-            if (!file.is_open()) {  
-                std::cerr << "Ошибка: не удалось открыть файл для записи." << std::endl;
-                return 1;
-            }
-            if (tube.presence) {
-                file << "--- Труба --- \n";
-                file << "Название трубы: " << tube.name << "\n";
-                file << "Длина: " << tube.length << "\n";
-                file << "Диаметр: " << tube.diameter << "\n";
-                file << "В ремонте: " << (tube.inRepair ? "Да" : "Нет") << "\n";
-            }
-            else {
-                file << "Труба не создана.\n";
-            }
-            if (cs.presence) {
-                file << "--- Компрессорная станция --- \n";
-                file << "Название станции: " << cs.name << "\n";
-                file << "Количество цехов: " << cs.numbersOfWorkshops << "\n";
-                file << "Цехов в работе: " << cs.workshopsAtWork << "\n";
-                file << "Эффективность: " << cs.efficiency << "\n";
-            }
-            else {
-                file << "Компрессорная станция не создана.\n";
-            }
-            file.close();
-            std::cout << "Данные сохранены\n";
-        }
-              break;
+        case 6: 
+            saveToFile(tube, cs);
+            break;
 
         case 7:
             loadFromFile(tube, cs);
             break;
-        
+
         case 0:
             std::cout << "Выход из программы.\n";
             return 0;
@@ -314,5 +313,6 @@ int main() {
             std::cout << "Неверный пункт меню.\n";
             break;
         }
+        }
     }
-}
+
