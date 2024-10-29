@@ -40,12 +40,12 @@ Tube createTube() {
     std::getline(std::cin, tube.name);
 
     std::cout << "Введите длину трубы: ";
-    while (!(std::cin >> tube.length)) {
+    while (!(std::cin >> tube.length) || tube.length <= 0) {
         check();
     }
 
     std::cout << "Введите диаметр трубы: ";
-    while (!(std::cin >> tube.diameter)) {
+    while (!(std::cin >> tube.diameter) || tube.diameter <= 0) {
         check();
     }
 
@@ -76,17 +76,17 @@ CompressionStation createCompressionStation() {
     std::getline(std::cin, cs.name);
 
     std::cout << "Введите количество цехов: ";
-    while (!(std::cin >> cs.numbersOfWorkshops)) {
+    while (!(std::cin >> cs.numbersOfWorkshops) || cs.numbersOfWorkshops <= 0) {
         check();
     }
 
     std::cout << "Введите количество работающих цехов: ";
-    while (!(std::cin >> cs.workshopsAtWork) || cs.workshopsAtWork > cs.numbersOfWorkshops) {
+    while (!(std::cin >> cs.workshopsAtWork) || cs.workshopsAtWork > cs.numbersOfWorkshops || cs.workshopsAtWork <= 0) {
         check();
     }
 
     std::cout << "Введите значение эффективности: ";
-    while (!(std::cin >> cs.efficiency)) {
+    while (!(std::cin >> cs.efficiency) || cs.efficiency <= 0) {
         check();
     }
 
@@ -146,7 +146,7 @@ void editTube(Tube& tube) {
 
 void editCompressionStation(CompressionStation& cs) {
     if (!cs.presence) {
-        std::cout << "Компрессорная станция не создана. Сначала создайте Компрессорную станцию.\n";
+        std::cout << "Компрессорная станция не создана. Сначала создайте КС.\n";
         return;
     }
 
@@ -177,6 +177,49 @@ void editCompressionStation(CompressionStation& cs) {
         check();
     }
     if (newEfficiency != 0) cs.efficiency = newEfficiency;
+}
+
+void loadFromFile(Tube& tube, CompressionStation& cs) {
+    std::ifstream file("smeta.txt");
+    if (!file.is_open()) {
+        std::cerr << "Ошибка: не удалось открыть файл для чтения." << std::endl;
+        return;
+    }
+
+    std::string line;
+
+    while (std::getline(file, line)) {
+        if (line == "--- Труба ---") {
+            tube.presence = true;
+            std::getline(file, line);
+            tube.name = line.substr(line.find(":") + 2);
+
+            std::getline(file, line);
+            tube.length = std::stod(line.substr(line.find(":") + 2));
+
+            std::getline(file, line);
+            tube.diameter = std::stod(line.substr(line.find(":") + 2));
+
+            std::getline(file, line);
+            tube.inRepair = (line.substr(line.find(":") + 2) == "Да");
+        }
+        else if (line == "--- Компрессорная станция ---") {
+            cs.presence = true;
+            std::getline(file, line);
+            cs.name = line.substr(line.find(":") + 2);
+
+            std::getline(file, line);
+            cs.numbersOfWorkshops = std::stoi(line.substr(line.find(":") + 2));
+
+            std::getline(file, line);
+            cs.workshopsAtWork = std::stoi(line.substr(line.find(":") + 2));
+
+            std::getline(file, line);
+            cs.efficiency = std::stoi(line.substr(line.find(":") + 2));
+        }
+    }
+    file.close();
+    std::cout << "Данные загружены из файла\n";
 }
 
 int main() {
@@ -228,6 +271,41 @@ int main() {
             editCompressionStation(cs);
             break;
 
+        case 6: {
+            std::ofstream file("smeta.txt");  
+            if (!file.is_open()) {  
+                std::cerr << "Ошибка: не удалось открыть файл для записи." << std::endl;
+                return 1;
+            }
+            if (tube.presence) {
+                file << "--- Труба --- \n";
+                file << "Название трубы: " << tube.name << "\n";
+                file << "Длина: " << tube.length << "\n";
+                file << "Диаметр: " << tube.diameter << "\n";
+                file << "В ремонте: " << (tube.inRepair ? "Да" : "Нет") << "\n";
+            }
+            else {
+                file << "Труба не создана.\n";
+            }
+            if (cs.presence) {
+                file << "--- Компрессорная станция --- \n";
+                file << "Название станции: " << cs.name << "\n";
+                file << "Количество цехов: " << cs.numbersOfWorkshops << "\n";
+                file << "Цехов в работе: " << cs.workshopsAtWork << "\n";
+                file << "Эффективность: " << cs.efficiency << "\n";
+            }
+            else {
+                file << "Компрессорная станция не создана.\n";
+            }
+            file.close();
+            std::cout << "Данные сохранены\n";
+        }
+              break;
+
+        case 7:
+            loadFromFile(tube, cs);
+            break;
+        
         case 0:
             std::cout << "Выход из программы.\n";
             return 0;
