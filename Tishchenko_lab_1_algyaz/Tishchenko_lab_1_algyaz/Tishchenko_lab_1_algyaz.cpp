@@ -38,6 +38,7 @@ Tube createTube() {
         std::cin.ignore();
         std::getline(std::cin, tube.name);
 
+
         std::cout << "Введите длину трубы: ";
         while (!(std::cin >> tube.length) || tube.length <= 0) {
             incorrectData();
@@ -197,21 +198,18 @@ void editCompressionStation(CompressionStation& cs) {
     }
 }
 
-void saveToFile(const Tube& tube, const CompressionStation& cs) {
-    std::ofstream file("smeta.txt");
-    if (!file.is_open()) {
-        std::cerr << "Ошибка: не удалось открыть файл для записи." << std::endl;
-        return;
-    }
-
+void saveTube(const Tube& tube, std::ofstream& file) {
     if (!(tube.name == "")) {
         file << "tube \n";
         file << tube.name << "\n";
         file << tube.length << "\n";
-        file <<tube.diameter << "\n";
+        file << tube.diameter << "\n";
         file << tube.inRepair << "\n";
     }
+}
 
+
+void saveCs(const CompressionStation& cs, std::ofstream& file) {
     if (!(cs.name == "")) {
         file << "cs \n";
         file << cs.name << "\n";
@@ -219,6 +217,18 @@ void saveToFile(const Tube& tube, const CompressionStation& cs) {
         file << cs.workshopsAtWork << "\n";
         file << cs.efficiency << "\n";
     }
+}
+
+void saveToFile(const Tube& tube, const CompressionStation& cs) {
+    std::ofstream file("smeta.txt");
+    if (!file.is_open()) {
+        std::cerr << "Ошибка: не удалось открыть файл для записи." << std::endl;
+        return;
+    }
+
+    saveTube(tube, file);
+    saveCs(cs, file);
+
     file.close();
     std::cout << "Данные сохранены\n";
 }
